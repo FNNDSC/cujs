@@ -10,7 +10,8 @@ import {FeedFileList} from '@fnndsc/chrisapi'
 import {ItemResource} from '@fnndsc/chrisapi'
 import {Resource} from '@fnndsc/chrisapi'
 import {Request} from '@fnndsc/chrisapi'
- import { downloadZip } from "client-zip/index.js"
+import { downloadZip } from "client-zip/index.js"
+import cujs from './src/js/cujs'
 import {
   CardHeader,
   Grid,
@@ -65,19 +66,21 @@ var authToken = '';
 
 // fetch a user auth token
 
-var lblMsg = document.getElementById("lblMsg");
-lblMsg.visible = false;
-var btnDownload = document.getElementById("btnDownload");
-btnDownload.visible = false;
+//var lblMsg = document.getElementById("lblMsg");
+//lblMsg.visible = false;
+//var btnDownload = document.getElementById("btnDownload");
+//btnDownload.visible = false;
 
 
 function authenticate(){
     chrisUrl = txtCubeUrl.value;
-    const authUrl = chrisUrl + 'auth-token/';
+    //const authUrl = chrisUrl + 'auth-token/';
     user = txtUserName.value;
     pwd = txtPwd.value;
-    resp = Client.getAuthToken(authUrl, user,pwd);
-    resp.then(token=>{
+    //resp = Client.getAuthToken(authUrl, user,pwd);
+    var cu = new cujs();
+    cujs.login(chrisUrl,user,pwd);
+    /*resp.then(token=>{
         client = new Client(chrisUrl,{ token });
         modal.style.display = "none";
         lblMsg.textContent = "Successfully logged in as User "+user;
@@ -90,6 +93,7 @@ function authenticate(){
         lblAuthMsg.textContent = "Invalid auth details";  
         modal.style.display = "block";
         });
+        */
 
 };
 

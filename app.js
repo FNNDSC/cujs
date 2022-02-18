@@ -10,8 +10,7 @@ import {FeedFileList} from '@fnndsc/chrisapi'
 import {ItemResource} from '@fnndsc/chrisapi'
 import {Resource} from '@fnndsc/chrisapi'
 import {Request} from '@fnndsc/chrisapi'
-import { downloadZip } from "client-zip/index.js"
-import cujs from './src/js/cujs'
+ import { downloadZip } from "client-zip/index.js"
 import {
   CardHeader,
   Grid,
@@ -30,6 +29,7 @@ import Promise from 'bluebird';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import { FileIcon, UploadIcon, ExclamationTriangleIcon } from '@patternfly/react-icons';
+import cujs from './cujs'
 
 
 let chrisUrl;
@@ -66,34 +66,35 @@ var authToken = '';
 
 // fetch a user auth token
 
-//var lblMsg = document.getElementById("lblMsg");
-//lblMsg.visible = false;
-//var btnDownload = document.getElementById("btnDownload");
-//btnDownload.visible = false;
+var lblMsg = document.getElementById("lblMsg");
+lblMsg.visible = false;
+var btnDownload = document.getElementById("btnDownload");
+btnDownload.visible = false;
+var cu = new cujs();
 
-
-function authenticate(){
+async function authenticate(){
     chrisUrl = txtCubeUrl.value;
-    //const authUrl = chrisUrl + 'auth-token/';
     user = txtUserName.value;
     pwd = txtPwd.value;
-    //resp = Client.getAuthToken(authUrl, user,pwd);
-    var cu = new cujs();
-    cujs.login(chrisUrl,user,pwd);
-    /*resp.then(token=>{
-        client = new Client(chrisUrl,{ token });
+
+    var success = await cu.login(chrisUrl,user,pwd)
+    
+    if(success)
+    {
+        console.log("success");
         modal.style.display = "none";
         lblMsg.textContent = "Successfully logged in as User "+user;
         lblMsg.className = "alert-success";
         $('.toast').toast('show');
-    })
-    .catch(error => {
+    }
+    else {
+        console.log("failed")
         clearForm();
         lblAuthMsg.className="alert-danger";
         lblAuthMsg.textContent = "Invalid auth details";  
         modal.style.display = "block";
-        });
-        */
+        }
+        
 
 };
 
@@ -190,7 +191,7 @@ function main(){
     event.preventDefault();
     btnShare.hidden="hidden";
     btnDownload.hidden = "hidden";
-    if(!client){
+    if(!cu.getToken()){
         lblAuthMsg.className="alert-danger";
         lblAuthMsg.textContent = "Please authenticate to CUBE";
         modal.style.display= "block";
@@ -203,19 +204,12 @@ function main(){
           lblMsg.className = "alert-primary";
           lblMsg.textContent = "Please wait while your files are being pushed";
           $('.toast').toast('show');
-          var upload_dir = user +'/uploads/' + Date.now() + '/';
-          for(var f=0;f<fu1.files.length;f++){
-              resp=client.uploadFile({
-              upload_path: upload_dir+fu1.files[f].name
-              },{
-              fname: fu1.files[f]
-              });
-          }
-          resp = client.createPluginInstance(1,{dir:upload_dir});
+          cu.upload(fu1.files);
+          var resp = cu.runDircopy(1);
           resp.then(val =>{
-              getInst = client.getPluginInstances();
-              getInst.then(val =>{
-                  window.console.log('state:', val.collection.items[0].data[0].value);
+              
+
+                  window.console.log('state:',cu.getFeedId() );
                   feedId = val.collection.items[0].data[0].value;
                   lblMsg.textContent="All files pushed to CUBE. Your feed id is " + val.collection.items[0].data[0].value;
                   lblMsg.className = "alert-secondary";
@@ -224,7 +218,7 @@ function main(){
                   btnShare.hidden="";
                   spanFile.textContent = " or drag and drop files here";
               
-                  });
+
               });
       }
       else{
@@ -304,7 +298,10 @@ function main(){
                   urls.push(f.links[0].href);
                   fnames.push(f.data[2].value);
                   const resp = download(f.links[0].href);
+                  var sbx = new sandbox();
+                  //sbx.writeFile(f.data[2].value, resp);
                   console.log(f.data[2].value)
+                  
                   zip.file(f.data[2].value, resp);
                 
                 
@@ -338,10 +335,9 @@ function main(){
   }
   
   const download = url => {
-    const params = { limit: 200, offset: 0 };
     const req = new Request(client.auth, 'application/octet-stream', 30000);
     const blobUrl = url;
-    return req.get(blobUrl,params).then(resp => resp.data);
+    return req.get(blobUrl).then(resp => resp.data);
   };
 
   const downloadByGroup = (urls, files_per_group=5) => {
@@ -370,6 +366,195 @@ function main(){
     return downloadByGroup(urls, 5).then(exportZip);
   }
    
+function sandbox(){
+        this.fs = null;
+  }
+    
+sandbox.prototype.onDeviceReady=function(callback){
+      var self = this;
+
+      // The file system has been prefixed as of Google Chrome 12:
+      window.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;
+    
+      if (window.requestFileSystem) {
+        window.requestFileSystem(window.TEMPORARY, 5*1024*1024*1024, function(fs){
+          self.fs = fs;
+          console.log("Getting new FS")
+          if(callback){callback();}
+        }, function(err) {throw new Error('Could not grant filesystem. Error code: ' + err.code);});
+      } 
+ }
+ 
+ sandbox.prototype.createPath=function(path, callback){
+     var self=this;
+     function createPath(){
+       console.log(self.fs)
+        // exclusive:false means if the folder already exists then don't throw an error
+        self.fs.root.getDirectory(path, {create: true, exclusive:false}, function(dirEntry) {
+            // Recursively add the new subfolder (if we still have another to create).
+            
+            console.log("folder created")
+            if(callback){callback();}
+          }, self.onFail);
+     }
+ 
+
+     if(this.fs){
+        createPath(); 
+         }
+       else
+       {
+         this.onDeviceReady(createPath);
+         }
+ }
+ 
+ sandbox.prototype.onFail = function(error){
+     console.log(error);
+ }
+ 
+sandbox.prototype.isFile = function(filePath, callback) {
+      var self = this;
+
+      function findFile() {
+
+        function errorHandler(err) {
+          window.console.log('File not found. Error code: ' + err.code);
+          //callback(null);
+        }
+
+        self.fs.root.getFile(filePath, {create: false}, function(fileEntry) {
+          // Get a File object representing the file,
+          fileEntry.file(function(fileObj) {
+            console.log(fileObj)
+            const url = window.URL.createObjectURL(new Blob([fileObj]));
+            const link = document.createElement("a");
+            link.href = url;
+            link.setAttribute("download", filePath);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+          }, errorHandler);
+        }, errorHandler);
+      }
+
+      if (this.fs) {
+        findFile();
+      } else {
+        this.onDeviceReady(findFile);
+      }
+    };
+
+sandbox.prototype.readFile = function(filePath, callback) {
+
+      this.getFileBlob(filePath, function(fileObj) {
+        var reader = new FileReader();
+
+        reader.onload = function() {
+          console.log(this.result);
+        };
+
+        if (fileObj) {
+          console.log("reading file")
+          return reader.readAsArrayBuffer(fileObj);
+           
+        } else {
+          callback(null);
+        }
+      });
+    };
+    
+sandbox.prototype.getFileBlob = function(filePath, callback) {
+      var self = this;
+
+      function getFile() {
+
+        function errorHandler(err) {
+          window.console.log('Could not retrieve file object. Error code: ' + err.code);
+          if(callback){callback();}
+        }
+        console.log(filePath)
+        self.fs.root.getFile(filePath, {create: false}, function(fileEntry) {
+          
+
+          // Get a File object representing the file,
+          fileEntry.file(function(fileObj) {
+            return fileObj
+            callback(fileObj);
+          }, errorHandler);
+        }, errorHandler);
+      }
+
+      if (this.fs) {
+        getFile();
+      } else {
+        this.onDeviceReady(getFile);
+      }
+    };
+
+ 
+sandbox.prototype.writeFile = function(filePath, fileData, callback) {
+      var self = this;
+
+      function checkPathAndWriteFile() {
+
+        function errorHandler(err) {
+          window.console.log('Could not write file. Error code: ' + err.code);
+          if (callback) {
+            callback(null);
+          }
+        }
+
+        function writeFile() {
+
+          self.fs.root.getFile(filePath, {create: true}, function(fileEntry) {
+            
+            // Create a FileWriter object for our FileEntry (filePath).
+            fileEntry.createWriter(function(fileWriter) {
+              
+              fileWriter.onwriteend = function() {
+                
+                //if (callback) {
+                  // Get a File object representing the file,
+                  //fileEntry.file(function(fileObj) {
+                    //callback(fileObj);
+                  //}, errorHandler);
+                //}
+                console.log("success")
+              };
+              
+
+              fileWriter.onerror = function(err) {
+                window.console.log('Could not write file. Error code: ' + err.toString());
+                if (callback) {
+                  callback(null);
+                }
+              };
+              
+              var blob = new Blob([fileData]);
+              fileWriter.write(blob);
+              console.log(fileData + "pushed")
+
+            }, self.onFail);
+          }, self.onFail);
+        }
+
+        var basedir = filePath.substring(0, filePath.lastIndexOf('/'));
+        console.log(filePath)
+        self.fs.root.getDirectory(basedir, {create: false}, function() {
+          console.log(basedir + "created")
+          writeFile();
+        }, self.onFail );
+      }
+
+      if (this.fs) {
+        checkPathAndWriteFile();
+      } else {
+        this.onDeviceReady(checkPathAndWriteFile);
+      }
+
+    };
+
 
   
   main();

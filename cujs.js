@@ -65,7 +65,7 @@ export default class cujs{
    * @param {Array} files An array of files object
    * @return {Promise<String>}  JS Promise, resolves to a string value 
    */
-  upload = async function(files){
+  uploadFiles = async function(files){
     var self = this;
     let response;
     
@@ -101,17 +101,17 @@ export default class cujs{
    */
   downloadFiles(feedId){
     let re;
-    re = client.getFeed(feedId);
+    re = this.client.getFeed(feedId);
     re.then(feed =>{
        const params = { limit: 200, offset: 0 };
-       files = feed.getFiles(params);
+       var files = feed.getFiles(params);
        
        files.then(async(val) =>{
             const urls = [];
             const zip = JsZip();
             if(val.collection.items){
                 for(const f of val.collection.items){
-                  const resp = download(f.links[0].href);
+                  const resp = this._download(f.links[0].href);
                   zip.file(f.data[2].value, resp);
                 }
             }
@@ -123,7 +123,7 @@ export default class cujs{
   };
   
   _download(url){
-    const req = new Request(client.auth, 'application/octet-stream', 30000);
+    const req = new Request(this.client.auth, 'application/octet-stream', 30000);
     const blobUrl = url;
     return req.get(blobUrl).then(resp => resp.data);
   };

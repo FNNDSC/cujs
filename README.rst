@@ -32,7 +32,9 @@ Import and use in your JS app
 
 
 
-TLDR
-To run this app:
+TLDR: To run this app:
+----------------------
+
 .. code-block:: bash
+
  $npm run dev

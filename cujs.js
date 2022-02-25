@@ -2,6 +2,7 @@ import Client from '@fnndsc/chrisapi';
 import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import {Request} from '@fnndsc/chrisapi'
+import sandbox from 'sanboxjs'
 
 export default class cujs{
 
@@ -72,7 +73,7 @@ export default class cujs{
     //Upload all files to CUBE
     var uploadDir = this.user + '/uploads/' + Date.now() + '/';
     for(var f=0;f<files.length;f++){
-          var upload = this.client.uploadFile({
+          var upload = await this.client.uploadFile({
           upload_path: uploadDir+ files[f].name
           },{
           fname: files[f]
@@ -82,6 +83,11 @@ export default class cujs{
       response = await this.client.createPluginInstance(this.pluginId,{dir:uploadDir});
       return response;
     
+  };
+  //
+  //
+  getFeedId(response){
+    return response.collection.items[0].data[0].value;
   };
   
   
@@ -111,7 +117,7 @@ export default class cujs{
             const zip = JsZip();
             if(val.collection.items){
                 for(const f of val.collection.items){
-                  const resp = this._download(f.links[0].href);
+                  const resp = await this._download(f.links[0].href);
                   zip.file(f.data[2].value, resp);
                 }
             }
@@ -122,11 +128,59 @@ export default class cujs{
     });
   };
   
-  _download(url){
-    const req = new Request(this.client.auth, 'application/octet-stream', 30000);
+  /**
+   * Download files of a particular feed from CUBE and save directory on user's disk
+   *
+   * @param {number} feedId  Id of a particular feed in CUBE
+   * @param {string} dirName Name of the directory to store the downloaded files inside users disk
+   */
+  saveFiles= async function(feedId,dirName){
+    let re;
+    var sbx = new sandbox();
+    re = this.client.getFeed(feedId);
+    re.then(async feed =>{
+       const params = { limit: 200, offset: 0 };
+       var files = feed.getFiles(params);
+       const existingDirectoryHandle = await window.showDirectoryPicker();
+       // In an existing directory, create a new directory named as dirName
+       const newDirectoryHandle = await existingDirectoryHandle.getDirectoryHandle(dirName, {
+        create: true,
+       });
+       files.then(async(val) =>{
+            if(val.collection.items){
+                for(const f of val.collection.items){
+                  var filePath = f.data[2].value;
+                  var paths = filePath.split('/');
+                  var fileName = paths[paths.length-1];
+                  const newFileHandle = await newDirectoryHandle.getFileHandle(fileName, { create: true });
+                  const writable = await newFileHandle.createWritable();
+                  const req = new Request(this.client.auth, 'application/octet-stream', 3000000);
+                  const blobUrl = f.links[0].href;
+                  const resp = req.get(blobUrl);
+                  resp.then(async blob=>{
+                      console.log("writing t0 disk")
+                      // Write the contents of the file to the stream.
+                      await writable.write(blob.data);
+                      // Close the file and write the contents to disk.
+                      await writable.close();
+                    });
+                } 
+            }
+    });
+    });
+  };
+  
+  /**
+   * Private method to download a blob/file/stream from CUBE 
+   *
+   * @param {String} url API endpoint to a particular resource in CUBE
+   * @response {Promise} JS promise, resolves to a string value
+   */
+    _download(url){
+    const req = new Request(this.client.auth, 'application/octet-stream', 30000000);
     const blobUrl = url;
     return req.get(blobUrl).then(resp => resp.data);
   };
-  
+
   
 }

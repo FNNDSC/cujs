@@ -4,6 +4,7 @@ import cujs from './cujs'
 
 const upload = document.getElementById('upload');
 const download = document.getElementById('download');
+const save = document.getElementById('save');
 const submit = document.getElementById('submit');
 const msg = document.getElementById('msg');
 var cu = new cujs();
@@ -11,19 +12,25 @@ let feedId;
 
 cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 
+// Upload files from local file system and Push to CUBE
 submit.onclick = function(){
-
+  console.log("Please wait while you files are being pushed to cube");
   var resp = cu.uploadFiles(upload.files);
   resp.then(data =>{
-    feedId=data.collection.items[0].data[0].value;
+    feedId=cu.getFeedId(data);
     console.log("Your feed id is :"+feedId);
     });
 };
 
+// Download files of a recent feed as a zip
 download.onclick = function(){
-
   cu.downloadFiles(feedId);
-  };
+};
 
+// Download files of a recent feed as save directly to local file system
+save.onclick = function(){
+  var saveDir = "Feed_" + feedId;
+  cu.saveFiles(feedId,saveDir);
+};
 
 

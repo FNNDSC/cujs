@@ -24,7 +24,7 @@ submit.onclick = function(){
 
 // Download files of a recent feed as a zip
 download.onclick = function(){
-  cu.downloadFiles(feedId);
+  cu.zipFiles(feedId);
 };
 
 // Download files of a recent feed as save directly to local file system

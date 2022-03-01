@@ -1,6 +1,6 @@
 {
-  "name": "@sandip117/cujs",
-  "version": "1.1.0",
+  "name": "chris-upload",
+  "version": "1.2.0",
   "description": "JS library to upload and push files to CUBE",
   "main": "cujs.js",
   "scripts": {

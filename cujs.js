@@ -89,7 +89,27 @@ export default class cujs{
   getFeedId(response){
     return response.collection.items[0].data[0].value;
   };
-  
+  /**
+   *
+   *
+   *
+   *
+   */
+   zipFiles(previousPluginId){
+     const plPfdoRunArgs = {
+       title: "zip_files",
+       previous_id: previousPluginId,
+       exec: "'tar cvfz %outputDir/parent.tgz %inputDir'"
+      };
+      var resp= this.client.getPlugins({name: "pl-pfdorun"});
+      resp.then(async data=>{
+          var pfdoId = data.collection.items[0].data[0].value;
+          var response = await this.client.createPluginInstance(pfdoId,plPfdoRunArgs);
+          })
+          .catch(error=>
+          {console.log("Could not find pl-dircopy. Errors" + error);});
+      
+   };
   
   /**
    * Logout from CUBE

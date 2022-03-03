@@ -90,7 +90,7 @@ export default class cujs{
     return response.collection.items[0].data[0].value;
   };
   /**
-   *
+   * Create a zip of the contents of a plugin node
    *
    *
    *
@@ -99,6 +99,8 @@ export default class cujs{
      const plPfdoRunArgs = {
        title: "zip_files",
        previous_id: previousPluginId,
+       inputFile: "input.meta.json",
+       noJobLogging: true,
        exec: "'tar cvfz %outputDir/parent.tgz %inputDir'"
       };
       var resp= this.client.getPlugins({name: "pl-pfdorun"});
@@ -107,7 +109,7 @@ export default class cujs{
           var response = await this.client.createPluginInstance(pfdoId,plPfdoRunArgs);
           })
           .catch(error=>
-          {console.log("Could not find pl-dircopy. Errors" + error);});
+          {console.log("Could not find pl-pfdorun. Errors" + error);});
       
    };
   
@@ -151,13 +153,13 @@ export default class cujs{
   /**
    * Download files of a particular feed from CUBE and save directory on user's disk
    *
-   * @param {number} feedId  Id of a particular feed in CUBE
+   * @param {number} instId  Id of a particular feed in CUBE
    * @param {string} dirName Name of the directory to store the downloaded files inside users disk
    */
-  saveFiles= async function(feedId,dirName){
+  saveFiles= async function(instId,dirName){
     let re;
     var sbx = new sandbox();
-    re = this.client.getFeed(feedId);
+    re = this.client.getPluginInstance(instId);
     re.then(async feed =>{
        const params = { limit: 200, offset: 0 };
        var files = feed.getFiles(params);

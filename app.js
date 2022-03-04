@@ -4,6 +4,7 @@ import cujs from './cujs'
 
 const upload = document.getElementById('upload');
 const download = document.getElementById('download');
+const zip = document.getElementById('zip');
 const save = document.getElementById('save');
 const submit = document.getElementById('submit');
 const msg = document.getElementById('msg');
@@ -24,6 +25,11 @@ submit.onclick = function(){
 
 // Download files of a recent feed as a zip
 download.onclick = function(){
+  cu.downloadFiles();
+};
+
+// Download files of a recent feed as a zip
+zip.onclick = function(){
   cu.zipFiles(feedId);
 };
 

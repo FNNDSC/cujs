@@ -106,7 +106,12 @@ export default class cujs{
       var resp= this.client.getPlugins({name: "pl-pfdorun"});
       resp.then(async data=>{
           var pfdoId = data.collection.items[0].data[0].value;
-          var response = await this.client.createPluginInstance(pfdoId,plPfdoRunArgs);
+          var response = this.client.createPluginInstance(pfdoId,plPfdoRunArgs);
+          response.then(data=>{
+            this.pfdoInstId = data.collection.items[0].data[0].value;
+            console.log("Preparing your files. Please wait ..");
+          });
+
           })
           .catch(error=>
           {console.log("Could not find pl-pfdorun. Errors" + error);});
@@ -127,25 +132,24 @@ export default class cujs{
    *
    * @param {number} feedId Id of a particular feed in CUBE
    */
-  downloadFiles(feedId){
+  downloadFiles(instId=this.pfdoInstId){
     let re;
-    re = this.client.getFeed(feedId);
+    re = this.client.getPluginInstance(instId);
     re.then(feed =>{
        const params = { limit: 200, offset: 0 };
        var files = feed.getFiles(params);
-       
        files.then(async(val) =>{
-            const urls = [];
-            const zip = JsZip();
             if(val.collection.items){
                 for(const f of val.collection.items){
-                  const resp = await this._download(f.links[0].href);
-                  zip.file(f.data[2].value, resp);
+                  var filePath = f.data[2].value;
+                  var paths = filePath.split('/');
+                  var fileName = paths[paths.length-1];
+                  if(fileName=='parent.tgz'){
+                    const resp = await this._download(f.links[0].href);
+                    FileSaver.saveAs(resp, fileName);
+                  } 
                 }
             }
-            const blob = await zip.generateAsync({ type: "blob" });
-            FileSaver.saveAs(blob, "download.zip");
-
     });
     });
   };

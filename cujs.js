@@ -101,7 +101,7 @@ export default class cujs{
        previous_id: previousPluginId,
        inputFile: "input.meta.json",
        noJobLogging: true,
-       exec: "'tar cvfz %outputDir/parent.tgz %inputDir'"
+       exec: "'zip -r %outputDir/parent.zip %inputDir'"
       };
       var resp= this.client.getPlugins({name: "pl-pfdorun"});
       resp.then(async data=>{
@@ -144,7 +144,7 @@ export default class cujs{
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
                   var fileName = paths[paths.length-1];
-                  if(fileName=='parent.tgz'){
+                  if(fileName=='parent.zip'){
                     const resp = await this._download(f.links[0].href);
                     FileSaver.saveAs(resp, fileName);
                   } 

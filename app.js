@@ -15,7 +15,7 @@ cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 
 // Upload files from local file system and Push to CUBE
 submit.onclick = function(){
-  console.log("Please wait while you files are being pushed to cube");
+  console.log("Please wait while your files are being pushed to cube");
   var resp = cu.uploadFiles(upload.files);
   resp.then(data =>{
     feedId=cu.getFeedId(data);

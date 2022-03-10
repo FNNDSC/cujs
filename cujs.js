@@ -107,9 +107,26 @@ export default class cujs{
       resp.then(async data=>{
           var pfdoId = data.collection.items[0].data[0].value;
           var response = this.client.createPluginInstance(pfdoId,plPfdoRunArgs);
-          response.then(data=>{
+          const delay = ms => new Promise(res => setTimeout(res, ms));
+          response.then(async data=>{
             this.pfdoInstId = data.collection.items[0].data[0].value;
             console.log("Preparing your files. Please wait ..");
+
+            //polling
+            const req = new Request(this.client.auth, 'application/vnd.collection+json', 30000000);
+            const blobUrl = data.collection.items[0].href;
+            var status = 'started';
+            var result = '';
+            var i = 0;
+            do {
+               await delay(5000);
+               status = await req.get(blobUrl).then(resp=>resp.data.collection.items[0].data[12].value);
+               console.log(status)
+            }
+            while (status !== 'finishedSuccessfully');
+
+ 
+            console.log("Your zipped files are ready to download");
           });
 
           })

@@ -80,7 +80,7 @@ export default class cujs{
           });
       }
 
-      response = await this.client.createPluginInstance(this.pluginId,{dir:uploadDir});
+      response = await this.client.createPluginInstance(this.pluginId,{dir:uploadDir,previous_id: 0});
       return response;
     
   };
@@ -111,29 +111,38 @@ export default class cujs{
           response.then(async data=>{
             this.pfdoInstId = data.collection.items[0].data[0].value;
             console.log("Preparing your files. Please wait ..");
-
-            //polling
-            const req = new Request(this.client.auth, 'application/vnd.collection+json', 30000000);
-            const blobUrl = data.collection.items[0].href;
-            var status = 'started';
-            var result = '';
-            var i = 0;
-            do {
-               await delay(5000);
-               status = await req.get(blobUrl).then(resp=>resp.data.collection.items[0].data[12].value);
-               console.log(status)
-            }
-            while (status !== 'finishedSuccessfully');
-
- 
+            const url = data.collection.items[0].href;
+            await this.pollPluginInstance(url);
+            // Print msg once polling is complete
             console.log("Your zipped files are ready to download");
-          });
+          })
+          .catch(error=>
+          {console.log("Please push files before zipping");});
 
           })
           .catch(error=>
           {console.log("Could not find pl-pfdorun. Errors" + error);});
       
    };
+   /**
+    * Poll to CUBE for a status on current plugin's url
+    *
+    *
+    *
+    */
+    pollPluginInstance = async function(url){
+      //polling
+      const delay = ms => new Promise(res => setTimeout(res, ms));
+      const req = new Request(this.client.auth, 'application/vnd.collection+json', 30000000);
+      const blobUrl = url;
+      var status = 'started';
+      do {
+           await delay(5000);
+           status = await req.get(blobUrl).then(resp=>resp.data.collection.items[0].data[12].value);
+           console.log(status)
+      }
+      while (status !== 'finishedSuccessfully');
+    };
   
   /**
    * Logout from CUBE
@@ -157,18 +166,25 @@ export default class cujs{
        var files = feed.getFiles(params);
        files.then(async(val) =>{
             if(val.collection.items){
+                var fileFound = false;
                 for(const f of val.collection.items){
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
                   var fileName = paths[paths.length-1];
                   if(fileName=='parent.zip'){
+                    fileFound = true;
                     const resp = await this._download(f.links[0].href);
                     FileSaver.saveAs(resp, fileName);
                   } 
                 }
             }
+            if(!fileFound){
+              console.log("No zipped file found to download");
+            }
     });
-    });
+    })
+    .catch(error=>
+          {console.log("Nothing to download.Please prepare a zip. Errors" + error);});
   };
   
   /**
@@ -209,7 +225,11 @@ export default class cujs{
                     });
                 } 
             }
-    });
+            else
+            { console.log("Zero files found!!");}
+    })
+    .catch(error=>{
+      console.log("Zero files found!!");});
     });
   };
   

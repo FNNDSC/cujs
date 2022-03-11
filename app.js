@@ -1,5 +1,5 @@
 import 'regenerator-runtime/runtime';
-
+//import SwiftClient from 'swift-client';
 import cujs from './cujs'
 
 const upload = document.getElementById('upload');
@@ -10,6 +10,9 @@ const submit = document.getElementById('submit');
 const msg = document.getElementById('msg');
 var cu = new cujs();
 let feedId;
+
+//swift client object
+
 
 cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 

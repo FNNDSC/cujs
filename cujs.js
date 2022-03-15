@@ -92,7 +92,7 @@ export default class cujs{
   /**
    * Create a zip of the contents of a plugin node
    *
-   *
+   * @param  {String} previousPluginId Plugin instance id in CUBE
    *
    */
    zipFiles(previousPluginId){
@@ -127,7 +127,7 @@ export default class cujs{
    /**
     * Poll to CUBE for a status on current plugin's url
     *
-    *
+    * @param  {String} url URL of a plugin instance in CUBE
     *
     */
     pollPluginInstance = async function(url){
@@ -186,6 +186,15 @@ export default class cujs{
     .catch(error=>
           {console.log("Nothing to download.Please prepare a zip. Errors" + error);});
   };
+  
+  /**
+   * Save the contents of a feed in local swift
+   *
+   *
+   *
+   */
+   saveToSwift(){
+   };
   
   /**
    * Download files of a particular feed from CUBE and save directory on user's disk

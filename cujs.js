@@ -67,7 +67,6 @@ export default class cujs{
    * @return {Promise<String>}  JS Promise, resolves to a string value 
    */
   uploadFiles = async function(files){
-    var self = this;
     let response;
     
     //Upload all files to CUBE
@@ -86,8 +85,21 @@ export default class cujs{
   };
   //
   //
-  getFeedId(response){
+  getPluginId(response){
     return response.collection.items[0].data[0].value;
+  };
+  //
+  //
+  getFeedId(response){
+    var pluginInstId = response.collection.items[0].data[0].value;
+    var resp = this.client.getPluginInstance(pluginInstId);
+    resp.then(plug=>{
+      var feed = plug.getFeed();
+      feed.then(feedData=>{
+        console.log("Feed id is :"+feedData.collection.items[0].data[0].value);
+      });
+    });
+    
   };
   /**
    * Create a zip of the contents of a plugin node
@@ -174,7 +186,7 @@ export default class cujs{
                   if(fileName=='parent.zip'){
                     fileFound = true;
                     const resp = await this._download(f.links[0].href);
-                    FileSaver.saveAs(resp, fileName);
+                    FileSaver.saveAs(resp, "parent_"+instId+".zip");
                   } 
                 }
             }
@@ -193,7 +205,26 @@ export default class cujs{
    *
    *
    */
-   saveToSwift(){
+   saveToSwift= async function(instId,cubeUrl,userName,password,files,fileNames){
+     const authUrl = cubeUrl + 'auth-token/';
+
+     // Login to local CUBE
+     Client.getAuthToken(authUrl, userName,password).then(async token=>{
+        var swiftClient = new Client(cubeUrl,{token});
+        
+        // upload files to swift
+        var uploadDir = userName + '/uploads/' + Date.now() + '/Feed_'+instId+'/';
+        for(var f=0;f<files.length;f++){
+          var upload = await swiftClient.uploadFile({
+          upload_path: uploadDir+ fileNames[f]
+          },{
+          fname: files[f]
+          });
+          console.log("uploaded "+ fileNames[f] + "to swift");
+      }
+      })
+      .catch(error=>{
+        console.log("Invalid login credentials. Error:"+error);});
    };
   
   /**
@@ -204,7 +235,6 @@ export default class cujs{
    */
   saveFiles= async function(instId,dirName){
     let re;
-    var sbx = new sandbox();
     re = this.client.getPluginInstance(instId);
     re.then(async feed =>{
        const params = { limit: 200, offset: 0 };
@@ -215,7 +245,7 @@ export default class cujs{
         create: true,
        });
        files.then(async(val) =>{
-            if(val.collection.items){
+            if(val.collection.items.length>0){
                 for(const f of val.collection.items){
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
@@ -241,6 +271,40 @@ export default class cujs{
       console.log("Zero files found!!");});
     });
   };
+  
+  /**
+   * Save to swift
+   *
+   */
+  getFiles= async function(cubeUrl,userName,password,instId){
+    let re;
+    re = this.client.getPluginInstance(instId);
+    re.then(async feed =>{
+       const params = { limit: 200, offset: 0 };
+       var files = feed.getFiles(params);
+       var downLoadedFiles = [];
+       var fileNames = [];
+       files.then(async(val) =>{
+            if(val.collection.items.length>0){
+                for(const f of val.collection.items){
+                  var filePath = f.data[2].value;
+                  var paths = filePath.split('/');
+                  var fileName = paths[paths.length-1];
+                  const resp = await this._download(f.links[0].href);
+                  downLoadedFiles.push(resp);
+                  fileNames.push(fileName);
+                } 
+                // save to swift
+                this.saveToSwift(instId,cubeUrl,userName,password,downLoadedFiles,fileNames);
+            }
+            else
+            { console.log("Zero files found!!");}
+    })
+    .catch(error=>{
+      console.log("Zero files found!!"+error);});
+    });
+  };
+  
   
   /**
    * Private method to download a blob/file/stream from CUBE 

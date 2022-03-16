@@ -1,8 +1,10 @@
 import 'regenerator-runtime/runtime';
-//import SwiftClient from 'swift-client';
+import SwiftClient from 'swift-client';
 import cujs from './cujs'
+import {Request} from '@fnndsc/chrisapi'
 
 const upload = document.getElementById('upload');
+const saveSwift = document.getElementById('saveSwift');
 const download = document.getElementById('download');
 const zip = document.getElementById('zip');
 const save = document.getElementById('save');
@@ -11,35 +13,40 @@ const msg = document.getElementById('msg');
 var cu = new cujs();
 let feedId;
 
-//swift client object
 
 
 cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 
 // Upload files from local file system and Push to CUBE
-submit.onclick = function(){
+submit.onclick = async function(){
   console.log("Please wait while your files are being pushed to cube");
   var resp = cu.uploadFiles(upload.files);
   resp.then(data =>{
-    feedId=cu.getFeedId(data);
-    console.log("Your feed id is :"+feedId);
+    feedId=cu.getPluginId(data);
+    cu.getFeedId(data);
+    console.log("Your plugin id is :"+feedId);
     });
 };
 
 // Download files of a recent feed as a zip
-download.onclick = function(){
-  cu.downloadFiles();
+download.onclick = async function(){
+  await cu.downloadFiles();
+};
+
+// Save to swift store
+saveSwift.onclick =async  function(){
+  await cu.getFiles('http://localhost:8000/api/v1/','chris','chris1234',feedId);
 };
 
 // Download files of a recent feed as a zip
-zip.onclick = function(){
-  cu.zipFiles(feedId);
+zip.onclick = async function(){
+  await cu.zipFiles(feedId);
 };
 
 // Download files of a recent feed as save directly to local file system
-save.onclick = function(){
+save.onclick = async function(){
   var saveDir = "Feed_" + feedId;
-  cu.saveFiles(feedId,saveDir);
+  await cu.saveFiles(feedId,saveDir);
 };
 
 

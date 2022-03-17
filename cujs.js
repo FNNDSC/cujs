@@ -67,6 +67,9 @@ export default class cujs{
    * @return {Promise<String>}  JS Promise, resolves to a string value 
    */
   uploadFiles = async function(files){
+    if(files.length==0){
+      console.log("Please upload files!");
+    }
     let response;
     
     //Upload all files to CUBE
@@ -213,7 +216,7 @@ export default class cujs{
         var swiftClient = new Client(cubeUrl,{token});
         
         // upload files to swift
-        var uploadDir = userName + '/uploads/' + Date.now() + '/Feed_'+instId+'/';
+        var uploadDir = userName + '/uploads/download/Feed_'+instId+'/';
         for(var f=0;f<files.length;f++){
           var upload = await swiftClient.uploadFile({
           upload_path: uploadDir+ fileNames[f]

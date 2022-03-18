@@ -23,7 +23,7 @@ submit.onclick = async function(){
   var resp = cu.uploadFiles(upload.files);
   resp.then(data =>{
     feedId=cu.getPluginId(data);
-    cu.getFeedId(data);
+    cu.getFeedId(feedId);
     console.log("Your plugin id is :"+feedId);
     });
 };
@@ -35,7 +35,7 @@ download.onclick = async function(){
 
 // Save to swift store
 saveSwift.onclick =async  function(){
-  await cu.getFiles('http://localhost:8000/api/v1/','chris','chris1234',feedId);
+  await cu.saveToSwift('http://localhost:8000/api/v1/','chris','chris1234',feedId);
 };
 
 // Download files of a recent feed as a zip

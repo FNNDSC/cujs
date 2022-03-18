@@ -86,15 +86,24 @@ export default class cujs{
       return response;
     
   };
-  //
-  //
+  
+  /**
+   * Utility method to return a plugin instance id from a response object
+   * 
+   * @param {Object} response An array of files object
+   *
+   */
   getPluginId(response){
     return response.collection.items[0].data[0].value;
   };
-  //
-  //
-  getFeedId(response){
-    var pluginInstId = response.collection.items[0].data[0].value;
+  
+  /**
+   * Utility method to get a feed id from a plugin instance id
+   *
+   * @param {number} pluginInstId An array of files object
+   *
+   */
+  getFeedId(pluginInstId){
     var resp = this.client.getPluginInstance(pluginInstId);
     resp.then(plug=>{
       var feed = plug.getFeed();
@@ -104,6 +113,7 @@ export default class cujs{
     });
     
   };
+  
   /**
    * Create a zip of the contents of a plugin node
    *
@@ -205,10 +215,15 @@ export default class cujs{
   /**
    * Save the contents of a feed in local swift
    *
-   *
+   * @param  {number} instId  User's password
+   * @param  {String} cubeUrl CUBE's url
+   * @param  {String} userName User's username in CUBE
+   * @param  {String} password User's password
+   * @param  {String} files User's password
+   * @param  {String} fileNames User's password
    *
    */
-   saveToSwift= async function(instId,cubeUrl,userName,password,files,fileNames){
+   _saveToSwift= async function(instId,cubeUrl,userName,password,files,fileNames){
      const authUrl = cubeUrl + 'auth-token/';
 
      // Login to local CUBE
@@ -276,10 +291,14 @@ export default class cujs{
   };
   
   /**
-   * Save to swift
+   * Download a nodes files and save them to a local swift store
    *
+   * @param  {String} cubeUrl  local CUBE's url
+   * @param  {String} userName local CUBES's username
+   * @param  {String} password local CUBES's password
+   * @param  {number} instId   Plugin instance id in remote CUBE
    */
-  getFiles= async function(cubeUrl,userName,password,instId){
+  saveToSwift= async function(cubeUrl,userName,password,instId){
     let re;
     re = this.client.getPluginInstance(instId);
     re.then(async feed =>{
@@ -298,7 +317,7 @@ export default class cujs{
                   fileNames.push(fileName);
                 } 
                 // save to swift
-                this.saveToSwift(instId,cubeUrl,userName,password,downLoadedFiles,fileNames);
+                this._saveToSwift(instId,cubeUrl,userName,password,downLoadedFiles,fileNames);
             }
             else
             { console.log("Zero files found!!");}

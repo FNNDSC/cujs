@@ -4,6 +4,7 @@ import cujs from './cujs'
 import {Request} from '@fnndsc/chrisapi'
 
 const upload = document.getElementById('upload');
+const share = document.getElementById('share');
 const saveSwift = document.getElementById('saveSwift');
 const download = document.getElementById('download');
 const zip = document.getElementById('zip');
@@ -47,6 +48,12 @@ zip.onclick = async function(){
 save.onclick = async function(){
   var saveDir = "Feed_" + feedId;
   await cu.saveFiles(feedId,saveDir);
+};
+
+// Share a current feed with another user
+share.onclick = async function(){
+  var userName = "chris";
+  await cu.shareFeed(userName);
 };
 
 

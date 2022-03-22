@@ -15,6 +15,7 @@ export default class cujs{
     this.res=null;
     this.uploadDir="";
     this.pluginId="";
+    this.feedId="";
   }
 
   /**
@@ -108,7 +109,8 @@ export default class cujs{
     resp.then(plug=>{
       var feed = plug.getFeed();
       feed.then(feedData=>{
-        console.log("Feed id is :"+feedData.collection.items[0].data[0].value);
+        this.feedId = feedData.collection.items[0].data[0].value;
+        console.log("Feed id is :"+ this.feedId);
       });
     });
     
@@ -338,6 +340,32 @@ export default class cujs{
     const req = new Request(this.client.auth, 'application/octet-stream', 30000000);
     const blobUrl = url;
     return req.get(blobUrl).then(resp => resp.data);
+  };
+  
+  /**
+   * Share a particular feed with another user in CUBE
+   *
+   * @param {String} userName username in CUBE
+   * @param {number} feedId Feed id in CUBE
+   */
+  shareFeed = function(userName,feedId=this.feedId){
+    
+    var respGetFeed = this.client.getFeed(feedId);
+    
+    respGetFeed.then(feed =>{
+              var putUserResp;
+              
+              putUserResp = feed.put({owner:userName});
+              putUserResp.then(user =>{
+                console.log("feed shared with "+userName);
+              })
+              .catch(error => {
+                console.log(error);
+
+              });
+              
+              });
+    
   };
 
   

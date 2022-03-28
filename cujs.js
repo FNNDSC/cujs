@@ -1,8 +1,7 @@
 import Client from '@fnndsc/chrisapi';
-import JsZip from 'jszip';
 import FileSaver from 'file-saver';
 import {Request} from '@fnndsc/chrisapi'
-import sandbox from 'sanboxjs'
+
 
 export default class cujs{
 
@@ -65,9 +64,11 @@ export default class cujs{
    * Upload files to CUBE
    *
    * @param {Array} files An array of files object
+   * @param {String} feedName name of the 'pl-dircopy' instance in CUBE
+   *
    * @return {Promise<String>}  JS Promise, resolves to a string value 
    */
-  uploadFiles = async function(files){
+  uploadFiles = async function(files,feedName){
     if(files.length==0){
       console.log("Please upload files!");
     }
@@ -83,7 +84,7 @@ export default class cujs{
           });
       }
 
-      response = await this.client.createPluginInstance(this.pluginId,{dir:uploadDir,previous_id: 0});
+      response = await this.client.createPluginInstance(this.pluginId,{dir:uploadDir,previous_id: 0,title:feedName});
       return response;
     
   };
@@ -254,9 +255,9 @@ export default class cujs{
    * @param {string} dirName Name of the directory to store the downloaded files inside users disk
    */
   saveFiles= async function(instId,dirName){
-    let re;
-    re = this.client.getPluginInstance(instId);
-    re.then(async feed =>{
+
+    var re = this.client.getPluginInstance(instId);
+    re.then( async  feed =>{
        const params = { limit: 200, offset: 0 };
        var files = feed.getFiles(params);
        const existingDirectoryHandle = await window.showDirectoryPicker();
@@ -289,7 +290,43 @@ export default class cujs{
     })
     .catch(error=>{
       console.log("Zero files found!!");});
-    });
+    })
+    .catch(error =>
+    {console.log(error);});
+  };
+  
+  /**
+   * Get a list of filenames from CUBE given the instance id
+   *
+   * @param {number} instId  Id of a particular feed in CUBE
+   *
+   * @return {Array} fileNames
+   */
+  viewFiles= async function(instId){
+    var fileNames = [];
+    var re = this.client.getPluginInstance(instId);
+    re.then( async  feed =>{
+       const params = { limit: 200, offset: 0 };
+       var files = feed.getFiles(params);
+       files.then(async(val) =>{
+            if(val.collection.items.length>0){
+                for(const f of val.collection.items){
+                  var filePath = f.data[2].value;
+                  var paths = filePath.split('/');
+                  var fileName = paths[paths.length-1];
+                  fileNames.push(fileName);
+
+                } 
+            }
+            else
+            { console.log("Zero files found!!");}
+    })
+    .catch(error=>{
+      console.log(error);});
+    })
+    .catch(error =>
+    {console.log(error);});
+    return fileNames.sort();
   };
   
   /**
@@ -348,7 +385,7 @@ export default class cujs{
    * @param {String} userName username in CUBE
    * @param {number} feedId Feed id in CUBE
    */
-  shareFeed = function(userName,feedId=this.feedId){
+  shareFeed = function(userName,feedId){
     
     var respGetFeed = this.client.getFeed(feedId);
     
@@ -367,6 +404,20 @@ export default class cujs{
               });
     
   };
+  
+  /**
+   * Delete a feed in CUBE
+   *
+   * @param {number} feedId feedId in CUBE
+   *
+   */
+   deleteFeed = function(feedId){
+     var respGetFeed = this.client.getFeed(feedId);
+    
+     respGetFeed.then(feed =>{
+              feed.delete();
+              });
+   };
 
   
 }

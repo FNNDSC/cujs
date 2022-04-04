@@ -1,6 +1,6 @@
 import Client from '@fnndsc/chrisapi';
 import FileSaver from 'file-saver';
-import {Request} from '@fnndsc/chrisapi'
+import Request from '@fnndsc/chrisapi';
 
 
 export default class cujs{

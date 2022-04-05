@@ -314,7 +314,7 @@ export default class cujs{
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
                   var fileName = paths[paths.length-1];
-                  fileNames.push(fileName);
+                  fileNames.push(f.links[0].href);
 
                 } 
             }

@@ -1,6 +1,6 @@
 import Client from '@fnndsc/chrisapi';
 import FileSaver from 'file-saver';
-import Request from '@fnndsc/chrisapi';
+import {Request} from '@fnndsc/chrisapi';
 
 
 export default class cujs{
@@ -277,7 +277,7 @@ export default class cujs{
                   const blobUrl = f.links[0].href;
                   const resp = req.get(blobUrl);
                   resp.then(async blob=>{
-                      console.log("writing t0 disk")
+                      console.log("writing to disk")
                       // Write the contents of the file to the stream.
                       await writable.write(blob.data);
                       // Close the file and write the contents to disk.
@@ -293,6 +293,25 @@ export default class cujs{
     })
     .catch(error =>
     {console.log(error);});
+  };
+  
+  /**
+   * Download files of a particular feed from CUBE and save directory on user's disk
+   *
+   * @param {number} instId  Id of a particular feed in CUBE
+   * @param {string} dirName Name of the directory to store the downloaded files inside users disk
+   */
+  downloadFeed= async function(instId=this.feedId){
+  
+    var dirName = "cube/feed_"+instId+'/';
+  
+    var re = await this.client.createPluginInstance(this.pluginId,{dir:dirName,previous_id: 0,title:"download_feed"+instId});
+   
+    
+    var instId=this.getPluginId(re);
+    
+    await this.zipFiles(instId)
+    
   };
   
   /**

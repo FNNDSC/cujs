@@ -21,7 +21,7 @@ cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 // Upload files from local file system and Push to CUBE
 submit.onclick = async function(){
   console.log("Please wait while your files are being pushed to cube");
-  var resp = cu.uploadFiles(upload.files);
+  var resp = cu.uploadFiles(upload.files,"cujs");
   resp.then(data =>{
     feedId=cu.getPluginId(data);
     cu.getFeedId(feedId);
@@ -47,7 +47,7 @@ zip.onclick = async function(){
 // Download files of a recent feed as save directly to local file system
 save.onclick = async function(){
   var saveDir = "Feed_" + feedId;
-  await cu.saveFiles(feedId,saveDir);
+  await cu.downloadFeed();
 };
 
 // Share a current feed with another user

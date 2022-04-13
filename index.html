@@ -10,53 +10,82 @@
 
   <title>Chris Upload</title>
   <style>
-    
+ 
+
+@keyframes growProgressBar {
+  0%, 33% { --pgPercentage: 0; }
+  100% { --pgPercentage: var(--value); }
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+
+@property --pgPercentage {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+div[role="progressbar"] {
+  --size: 12rem;
+  --fg: #369;
+  --bg: #def;
+  --pgPercentage: var(--value);
+  animation: growProgressBar 3s 1 forwards;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: 
+    radial-gradient(closest-side, white 80%, transparent 0 99.9%, white 0),
+    conic-gradient(var(--fg) calc(var(--pgPercentage) * 1%), var(--bg) 0)
+    ;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: calc(var(--size) / 5);
+  color: var(--fg);
+}
+
+div[role="progressbar"]::before {
+  counter-reset: percentage var(--value);
+  content: counter(percentage) '%';
+}
+
+/* demo */
+body {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+.blink_me {
+  animation: blinker 1s linear infinite;
+}
+
+
+
+
   </style>
 </head>
 <body>
-<div>
-<input type='file' id='upload' multiple></input>
-</br>
-</br>
-</br>
-</br>
-</br>
-</br>
- <p class="h4">Push to remote CUBE</p>
-<button type='button' id='submit' class="btn btn-success"> Push To CUBE</button>
-</br>
-</br>
-</br>
-</br>
-<p class="h4">Prepare a zip file by running pfdorun</p>
-<button type='button' id='zip' class="btn btn-primary"> Prepare as zip  </button> 
-</br>
-</br>
-</br>
-</br>
-<p class="h4">Download data using pfdorun instance</p>
-<button type='button' id='download' class="btn btn-secondary"> Download as zip</button> 
-</br>
-</br>
-</br>
-</br>
-<p class="h4">Download directly to user's disk(Chromium only)</p>
-<button type='button' id='save' class="btn btn-warning"> Write to My Disk</button> 
-</br>
-</br>
-</br>
-</br>
-<p class="h4">Save/upload to local swift store using CUBE APIs</p>
-<button type='button' id='saveSwift' class="btn btn-info"> Save to My Swift</button> 
-</br>
-</br>
-</br>
-</br>
-<p class="h4">Share feed with another user</p>
-<button type='button' id='share' class="btn btn-dark"> Share </button> 
+<div class="form">
+Feed ID:<input type="text" id="txtFeed" class="form-control"></input>
+<button type='button' id='save' class="btn btn-primary"> Download Feed</button> 
+
 <label id ='msg'></label>
 </div>
-  
+
+
+
+<div id='pgBar'  role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="--value:0;display:none;"></div>
+
+
+ 
 
   <script src="app.js"></script>
 </body>

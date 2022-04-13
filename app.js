@@ -11,49 +11,22 @@ const zip = document.getElementById('zip');
 const save = document.getElementById('save');
 const submit = document.getElementById('submit');
 const msg = document.getElementById('msg');
+const pgBar = document.getElementById('pgBar');
+const txtFeed = document.getElementById('txtFeed');
 var cu = new cujs();
 let feedId;
 
-
-
 cu.login('http://localhost:8000/api/v1/','cube','cube1234');
-
-// Upload files from local file system and Push to CUBE
-submit.onclick = async function(){
-  console.log("Please wait while your files are being pushed to cube");
-  var resp = cu.uploadFiles(upload.files,"cujs");
-  resp.then(data =>{
-    feedId=cu.getPluginId(data);
-    cu.getFeedId(feedId);
-    console.log("Your plugin id is :"+feedId);
-    });
-};
-
-// Download files of a recent feed as a zip
-download.onclick = async function(){
-  await cu.downloadFiles();
-};
-
-// Save to swift store
-saveSwift.onclick =async  function(){
-  await cu.saveToSwift('http://localhost:8000/api/v1/','chris','chris1234',feedId);
-};
-
-// Download files of a recent feed as a zip
-zip.onclick = async function(){
-  await cu.zipFiles(feedId);
-};
 
 // Download files of a recent feed as save directly to local file system
 save.onclick = async function(){
-  var saveDir = "Feed_" + feedId;
-  await cu.downloadFeed();
+  pgBar.style+="display:block;--value:0";
+  var resp = await cu.downloadFeed(parseInt(txtFeed.value),pgBar);
+
 };
 
-// Share a current feed with another user
-share.onclick = async function(){
-  var userName = "chris";
-  await cu.shareFeed(userName);
+pgBar.onclick = async function(){
+  await cu.downloadFiles();
 };
 
 

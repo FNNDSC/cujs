@@ -123,7 +123,7 @@ export default class cujs{
    * @param  {String} previousPluginId Plugin instance id in CUBE
    *
    */
-   zipFiles(previousPluginId){
+   zipFiles(previousPluginId,progress){
      const plPfdoRunArgs = {
        title: "zip_files",
        previous_id: previousPluginId,
@@ -140,9 +140,11 @@ export default class cujs{
             this.pfdoInstId = data.collection.items[0].data[0].value;
             console.log("Preparing your files. Please wait ..");
             const url = data.collection.items[0].href;
-            await this.pollPluginInstance(url);
+            var status = "started";
+            await this.pollPluginInstance(url,progress);
             // Print msg once polling is complete
             console.log("Your zipped files are ready to download");
+            this.downloadFiles();
           })
           .catch(error=>
           {console.log("Please push files before zipping");});
@@ -158,7 +160,7 @@ export default class cujs{
     * @param  {String} url URL of a plugin instance in CUBE
     *
     */
-    pollPluginInstance = async function(url){
+    pollPluginInstance = async function(url,progress){
       //polling
       const delay = ms => new Promise(res => setTimeout(res, ms));
       const req = new Request(this.client.auth, 'application/vnd.collection+json', 30000000);
@@ -167,7 +169,24 @@ export default class cujs{
       do {
            await delay(5000);
            status = await req.get(blobUrl).then(resp=>resp.data.collection.items[0].data[12].value);
-           console.log(status)
+           console.log(status);
+           if(status =='waiting'){
+             progress.style="--value:10";
+           }
+           else if(status =='started'){
+             progress.style="--value:40";
+           }
+           if(status =='registeringFiles'){
+             progress.style="--value:80";
+           }
+           if(status =='finishedSuccessfully'){
+             progress.style="--value:100";
+           }
+           if(status =='cancelled'){
+             progress.style="color:red;";
+           }
+           
+
       }
       while (status !== 'finishedSuccessfully');
     };
@@ -301,7 +320,7 @@ export default class cujs{
    * @param {number} instId  Id of a particular feed in CUBE
    * @param {string} dirName Name of the directory to store the downloaded files inside users disk
    */
-  downloadFeed= async function(instId=this.feedId){
+  downloadFeed= async function(instId,progress){
   
     var dirName = "cube/feed_"+instId+'/';
   
@@ -310,7 +329,8 @@ export default class cujs{
     
     var instId=this.getPluginId(re);
     
-    await this.zipFiles(instId)
+    await this.zipFiles(instId,progress);
+
     
   };
   

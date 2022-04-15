@@ -23,30 +23,14 @@ export default class cujs{
    * @param  {String} url CUBE's url
    * @param  {String} userName User's username in CUBE
    * @param  {String} password User's password
-   * @return {Promise<String>} JS Promise, resolves to a string value 
    */
   login= async function(url,userName,password){
     const authUrl = url + 'auth-token/';
     this.url = url;
     this.user=userName;
-    
-    Client.getAuthToken(authUrl, userName,password).then(token=>{
-        this.client = new Client(url,{token});
-        var searchParams = {name: "pl-dircopy"};
-        var resp= this.client.getPlugins(searchParams);
-        resp.then(data=>{
-          this.pluginId = data.collection.items[0].data[0].value;
-          })
-          .catch(error=>
-          {console.log("Could not find pl-dircopy. Errors" + error);});
-    })
-    .catch(error=>{
-      console.log("Invalid login credentials. Error:"+error);});
-      
-    var res= await Client.getAuthToken(authUrl, userName,password);
 
-    return res;
-    
+    const token = await Client.getAuthToken(authUrl, userName,password);
+    this.client = new Client(url, {token});
   };
   
   /**

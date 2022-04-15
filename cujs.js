@@ -31,6 +31,9 @@ export default class cujs{
 
     const token = await Client.getAuthToken(authUrl, userName,password);
     this.client = new Client(url, {token});
+    const searchParams = {name: "pl-dircopy"};
+    const data = await this.client.getPlugins(searchParams);
+    this.pluginId = data.collection.items[0].data[0].value;
   };
   
   /**

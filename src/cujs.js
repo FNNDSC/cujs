@@ -1,6 +1,6 @@
 import Client from '@fnndsc/chrisapi';
 import FileSaver from 'file-saver';
-import {Request} from '@fnndsc/chrisapi';
+import { Request } from '@fnndsc/chrisapi';
 
 
 export default class cujs{
@@ -123,7 +123,7 @@ export default class cujs{
    * @param  {String} previousPluginId Plugin instance id in CUBE
    *
    */
-   zipFiles(previousPluginId,progress){
+   zipFiles(previousPluginId){
      const plPfdoRunArgs = {
        title: "zip_files",
        previous_id: previousPluginId,
@@ -141,7 +141,7 @@ export default class cujs{
             console.log("Preparing your files. Please wait ..");
             const url = data.collection.items[0].href;
             var status = "started";
-            await this.pollPluginInstance(url,progress);
+            await this.pollPluginInstance(url);
             // Print msg once polling is complete
             console.log("Your zipped files are ready to download");
             this.downloadFiles();
@@ -160,7 +160,7 @@ export default class cujs{
     * @param  {String} url URL of a plugin instance in CUBE
     *
     */
-    pollPluginInstance = async function(url,progress){
+    pollPluginInstance = async function(url){
       //polling
       const delay = ms => new Promise(res => setTimeout(res, ms));
       const req = new Request(this.client.auth, 'application/vnd.collection+json', 30000000);
@@ -169,23 +169,7 @@ export default class cujs{
       do {
            await delay(5000);
            status = await req.get(blobUrl).then(resp=>resp.data.collection.items[0].data[12].value);
-           console.log(status);
-           if(status =='waiting'){
-             progress.style="--value:10";
-           }
-           else if(status =='started'){
-             progress.style="--value:40";
-           }
-           if(status =='registeringFiles'){
-             progress.style="--value:80";
-           }
-           if(status =='finishedSuccessfully'){
-             progress.style="--value:100";
-           }
-           if(status =='cancelled'){
-             progress.style="color:red;";
-           }
-           
+           console.log(status);           
 
       }
       while (status !== 'finishedSuccessfully');
@@ -320,16 +304,16 @@ export default class cujs{
    * @param {number} instId  Id of a particular feed in CUBE
    * @param {string} dirName Name of the directory to store the downloaded files inside users disk
    */
-  downloadFeed= async function(instId,progress){
+  downloadFeed= async function(instId,feedName){
   
     var dirName = "cube/feed_"+instId+'/';
   
-    var re = await this.client.createPluginInstance(this.pluginId,{dir:dirName,previous_id: 0,title:"download_feed"+instId});
+    var re = await this.client.createPluginInstance(this.pluginId,{dir:dirName,previous_id: 0,title:feedName});
    
     
-    var instId=this.getPluginId(re);
+    var dircopyInstId=this.getPluginId(re);
     
-    await this.zipFiles(instId,progress);
+    await this.zipFiles(dircopyInstId);
 
     
   };
@@ -457,6 +441,23 @@ export default class cujs{
               feed.delete();
               });
    };
+   
+   /**
+    *
+    *
+    */
+    setClient=async function(client){
+      const delay = ms => new Promise(res => setTimeout(res, ms));
+      this.client=client;
+      var searchParams = {name: "pl-dircopy"};
+      var resp= this.client.getPlugins(searchParams);
+      resp.then(data=>{
+          this.pluginId = data.collection.items[0].data[0].value;
+      })
+      .catch(error=>
+      {console.log("Could not find pl-dircopy. Errors" + error);});
+      await delay(500);
+    }
 
   
 }

@@ -172,7 +172,7 @@ export default class cujs{
            console.log(status);           
 
       }
-      while (status !== 'finishedSuccessfully');
+      while (status !== 'finishedSuccessfully' && status != 'cancelled');
     };
   
   /**
@@ -306,14 +306,21 @@ export default class cujs{
    */
   downloadFeed= async function(instId,feedName){
   
-    var dirName = "cube/feed_"+instId+'/';
+    var feed = await this.client.getFeed(instId);
+    
+    var dirPath = feed.data.creator_username + "/feed_" + instId;
   
-    var re = await this.client.createPluginInstance(this.pluginId,{dir:dirName,previous_id: 0,title:feedName});
+  
+    var re = await this.client.createPluginInstance(this.pluginId,{dir:dirPath,previous_id: 0,title:feedName});
    
     
     var dircopyInstId=this.getPluginId(re);
     
     await this.zipFiles(dircopyInstId);
+    
+    var newFeed = await re.getFeed();
+    
+    return newFeed.data;
 
     
   };

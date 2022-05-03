@@ -25,8 +25,10 @@ cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 
 // Download files of a recent feed as save directly to local file system
 save.onclick = async function(){
-  //pgBar.style+="display:block;--value:0";
-  //var resp = await cu.downloadFeed(parseInt(txtFeed.value),pgBar);
+
+  var resp = await cu.downloadFeed(parseInt(txtFeed.value),"Download of "+txtFeed.value);
+  
+  console.log(resp)
   
   const text = txtFeed.value;
   words = text.split(" ");

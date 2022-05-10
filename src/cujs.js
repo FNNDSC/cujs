@@ -1,6 +1,6 @@
 import Client from '@fnndsc/chrisapi';
 import FileSaver from 'file-saver';
-import { Request } from '@fnndsc/chrisapi';
+import { Request, Feed } from '@fnndsc/chrisapi';
 
 
 export default class cujs{
@@ -123,7 +123,7 @@ export default class cujs{
    * @param  {String} previousPluginId Plugin instance id in CUBE
    *
    */
-   zipFiles(previousPluginId){
+   zipFiles(previousPluginId, zipName){
      const plPfdoRunArgs = {
        title: "zip_files",
        previous_id: previousPluginId,
@@ -144,7 +144,7 @@ export default class cujs{
             await this.pollPluginInstance(url);
             // Print msg once polling is complete
             console.log("Your zipped files are ready to download");
-            this.downloadFiles();
+            this.downloadFiles(this.pfdoInstId,zipName);
           })
           .catch(error=>
           {console.log("Please push files before zipping");});
@@ -160,7 +160,7 @@ export default class cujs{
     * @param  {String} url URL of a plugin instance in CUBE
     *
     */
-    pollPluginInstance = async function(url){
+    pollPluginInstance = async function(url) {
       //polling
       const delay = ms => new Promise(res => setTimeout(res, ms));
       const req = new Request(this.client.auth, 'application/vnd.collection+json', 30000000);
@@ -189,7 +189,7 @@ export default class cujs{
    *
    * @param {number} feedId Id of a particular feed in CUBE
    */
-  downloadFiles(instId=this.pfdoInstId){
+  downloadFiles(instId, zipName){
     let re;
     re = this.client.getPluginInstance(instId);
     re.then(feed =>{
@@ -205,7 +205,7 @@ export default class cujs{
                   if(fileName=='parent.zip'){
                     fileFound = true;
                     const resp = await this._download(f.links[0].href);
-                    FileSaver.saveAs(resp, "parent_"+instId+".zip");
+                    FileSaver.saveAs(resp, zipName+".zip");
                   } 
                 }
             }
@@ -308,6 +308,8 @@ export default class cujs{
   
     var feed = await this.client.getFeed(instId);
     
+    const zipName = feed.data.name;
+    
     var dirPath = feed.data.creator_username + "/feed_" + instId;
   
   
@@ -316,11 +318,11 @@ export default class cujs{
     
     var dircopyInstId=this.getPluginId(re);
     
-    await this.zipFiles(dircopyInstId);
+    await this.zipFiles(dircopyInstId, zipName);
     
     var newFeed = await re.getFeed();
     
-    return newFeed.data;
+    return newFeed;
 
     
   };
@@ -450,7 +452,7 @@ export default class cujs{
    };
    
    /**
-    *
+    * Set this client to an existing ChRIS client instance
     *
     */
     setClient=async function(client){
@@ -465,6 +467,82 @@ export default class cujs{
       {console.log("Could not find pl-dircopy. Errors" + error);});
       await delay(500);
     }
+    
+    /**
+    * Get the progress of a given feed
+    *
+    */
+    getFeedProgress= async function(feed){
+    
+      const LOOKUP = new Map();
+      LOOKUP.set("cancelled",0);
+      LOOKUP.set("started",1);
+      LOOKUP.set("waiting",2);
+      LOOKUP.set("registeringFiles",3);
+      LOOKUP.set("finishedSuccessfully",4);
+                      
+      const pluginInstances = await feed.getPluginInstances();
+      
+      const totalMilestones = pluginInstances.data.length * 4;
+      var completedMilestones = 0;
+      
+      for(var pluginInstance of pluginInstances.data){
+        var status = pluginInstance.status;
+        completedMilestones += LOOKUP.get(status);
+      }
+      
+      var progressPercentage = (completedMilestones/ totalMilestones) * 100;
+      
+      return progressPercentage;
+      
+    }
+    
+    /**
+    * Get a feed given it's id
+    *
+    */
+    getFeed= async function(id){
+      const feed = await this.client.getFeed(id);
+      return feed;
+      
+    }
+    
+    /**
+    * Get the cumulative run time of a given feed
+    *
+    */
+    getRunTime=async function(feed){
+      const pluginInstances = await feed.getPluginInstances();
+      
+      var totalRunTime = 0;
+      
+      for(var pluginInstance of pluginInstances.data){
+        var startTime = Date.parse(pluginInstance.start_date);
+        var endTime = Date.parse(pluginInstance.end_date);
+        
+        totalRunTime += (endTime - startTime);
+      }
+      
+      return totalRunTime/60000;
+    }
+    
+    /**
+    * Get the total file size of a given feed
+    *
+    */
+    getSize=async function(feed){
+      const pluginInstances = await feed.getPluginInstances();
+      
+      var totalSize = 0;
+      
+      for(var pluginInstance of pluginInstances.data){
+        
+        totalSize += pluginInstance.size;
+      }
+      
+      return totalSize/1000000;
+    }
+
 
   
 }

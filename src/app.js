@@ -1,8 +1,10 @@
+
+
 import 'regenerator-runtime/runtime';
 import SwiftClient from 'swift-client';
 import cujs from './cujs';
 import trie from './trie'
-import {Request} from '@fnndsc/chrisapi'
+import {Request, Feed} from '@fnndsc/chrisapi'
 
 const upload = document.getElementById('upload');
 const share = document.getElementById('share');
@@ -26,10 +28,15 @@ cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 // Download files of a recent feed as save directly to local file system
 save.onclick = async function(){
 
-  var resp = await cu.downloadFeed(parseInt(txtFeed.value),"Download of "+txtFeed.value);
+  //var feed = await cu.downloadFeed(parseInt(txtFeed.value),"Download of "+txtFeed.value);
+  var feed = await cu.getFeed(parseInt(txtFeed.value));
+
+  var size =  await cu.getSize(feed);  
+  var runTime =  await cu.getRunTime(feed);  
+  var progress =  await cu.getFeedProgress(feed);  
   
-  console.log(resp)
-  
+  console.log(size + "mb;" + runTime +"minutes;"+progress +"%");
+
   const text = txtFeed.value;
   words = text.split(" ");
   for (var word of words){

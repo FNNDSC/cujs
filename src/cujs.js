@@ -131,7 +131,7 @@ export default class cujs{
        noJobLogging: true,
        exec: "'zip -r %outputDir/parent.zip %inputDir'"
       };
-      var resp= this.client.getPlugins({name: "pl-pfdorun"});
+      var resp= this.client.getPlugins({name_exact: "pl-pfdorun"});
       resp.then(async data=>{
           var pfdoId = data.collection.items[0].data[0].value;
           var response = this.client.createPluginInstance(pfdoId,plPfdoRunArgs);
@@ -469,7 +469,7 @@ export default class cujs{
     }
     
     /**
-    * Get the progress of a given feed
+    * Get the progress of a given feed (WIP)
     *
     */
     getFeedProgress= async function(feed){
@@ -508,7 +508,7 @@ export default class cujs{
     }
     
     /**
-    * Get the cumulative run time of a given feed
+    * Get the cumulative run time of a given feed in milliseconds
     *
     */
     getRunTime=async function(feed){
@@ -523,11 +523,11 @@ export default class cujs{
         totalRunTime += (endTime - startTime);
       }
       
-      return totalRunTime/60000;
+      return totalRunTime;
     }
     
     /**
-    * Get the total file size of a given feed
+    * Get the total file size of a given feed in bytes
     *
     */
     getSize=async function(feed){
@@ -540,7 +540,7 @@ export default class cujs{
         totalSize += pluginInstance.size;
       }
       
-      return totalSize/1000000;
+      return totalSize;
     }
 
 

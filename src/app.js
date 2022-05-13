@@ -31,11 +31,9 @@ save.onclick = async function(){
   //var feed = await cu.downloadFeed(parseInt(txtFeed.value),"Download of "+txtFeed.value);
   var feed = await cu.getFeed(parseInt(txtFeed.value));
 
-  var size =  await cu.getSize(feed);  
-  var runTime =  await cu.getRunTime(feed);  
-  var progress =  await cu.getFeedProgress(feed);  
+  var details = await cu.getPluginInstanceDetails(feed);
   
-  console.log(size + "mb;" + runTime +"minutes;"+progress +"%");
+  console.log(details);
 
   const text = txtFeed.value;
   words = text.split(" ");

@@ -542,6 +542,101 @@ export default class cujs{
       
       return totalSize;
     }
+    
+    /**
+     * Return an object containing details of plugin instances of a given feed
+     *
+     * @param {Feed} feed
+     *
+     * @return {Object}
+     */
+    getPluginInstanceDetails = async function(feed){
+    
+      // declare lookup for instance intermediate statuses
+      const LOOKUP = new Map();
+      LOOKUP.set("cancelled",0);
+      LOOKUP.set("started",1);
+      LOOKUP.set("waiting",2);
+      LOOKUP.set("registeringFiles",3);
+      LOOKUP.set("finishedSuccessfully",4);
+      
+      // json object to return details
+      let details = {};
+    
+      // declare variables to be calculated
+      let totalSize = 0;
+      let totalRunTime = 0;
+      let totalProgress = 0;
+      
+      const pluginInstances = await feed.getPluginInstances();
+      const totalMilestones = pluginInstances.data.length * 4;
+      let completedMilestones = 0;
+      
+      // iterate over all instances to calculate results
+      for(const pluginInstance of pluginInstances.data){
+        const startTime = Date.parse(pluginInstance.start_date);
+        const endTime = Date.parse(pluginInstance.end_date);
+        
+        totalRunTime += (endTime - startTime);
+        totalSize += pluginInstance.size;
+        const status = pluginInstance.status;
+        completedMilestones += LOOKUP.get(status);
+        
+      }
+      const progressPercentage = (completedMilestones/ totalMilestones) * 100;
+      
+      // fit details in json
+      details.size = this._formatBytes(totalSize);
+      details.progress = progressPercentage;
+      details.time = this._convertMsToHM(totalRunTime);
+      
+      return details;
+      
+      
+    };
+    /**
+     * Utility method to convert ms to HHMMSS
+     *
+     *
+     */
+     _convertMsToHM(milliseconds) {
+       // convert to hours
+       let seconds = Math.floor(milliseconds / 1000);
+       let minutes = Math.floor(seconds / 60);
+       const hours = Math.floor(minutes / 60);
+
+       seconds = seconds % 60;
+   
+       minutes = minutes % 60;
+
+       return `${this._padTo2Digits(hours)}:${this._padTo2Digits(minutes)}:${this._padTo2Digits(seconds)}`;
+      };
+      
+      /**
+       * Utility method to round to 2 digits
+       *
+       *
+       */
+      _padTo2Digits(num) {
+        return num.toString().padStart(2, '0');
+      };
+      /**
+       * Utility method converting bytes to standard sizes
+       *
+       *
+       */
+      _formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+      };
+
 
 
   

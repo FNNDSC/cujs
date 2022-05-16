@@ -662,6 +662,19 @@ export default class cujs{
          // create dircopy parameters
          // Schedule pl-dircopy
        };
+       
+       /**
+        * Replace white spaces in a text by the given char
+        *
+        * @param {String}
+        * @param {character}
+        *
+        * @return {String}
+        */
+        replaceSpaceByChar(name,replaceBy){
+          const newName = name.replace(" ",replaceBy);
+          return newName;
+        };
 
 
 

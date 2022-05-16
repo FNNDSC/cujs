@@ -124,6 +124,10 @@ export default class cujs{
    *
    */
    zipFiles(previousPluginId, zipName){
+     
+     // trim white spaces in name
+     // replace with '_'
+     zipName = zipname.replace(" ","_");
      const plPfdoRunArgs = {
        title: "zip_files",
        previous_id: previousPluginId,
@@ -549,6 +553,11 @@ export default class cujs{
      * @param {Feed} feed
      *
      * @return {Object}
+     * @example :{
+     *             size : "Bytes/kB/MB/GB/../ZB",
+     *             progress : nn,
+     *             time : "HH:MM:SS"
+     *           }
      */
     getPluginInstanceDetails = async function(feed){
     
@@ -636,6 +645,23 @@ export default class cujs{
 
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
       };
+      
+      /**
+       * Create a new feed that merge contents of existing 
+       * list of feeds
+       *
+       * @param {}
+       * @param {}
+       *
+       * @return {Feed}
+       */
+       createMergeFeed(feedIdList,newFeedName){
+       
+         // Fetch all feeds in the list
+         // Search `pl-dircopy` id
+         // create dircopy parameters
+         // Schedule pl-dircopy
+       };
 
 
 

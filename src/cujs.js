@@ -123,11 +123,11 @@ export default class cujs{
    * @param  {String} previousPluginId Plugin instance id in CUBE
    *
    */
-   zipFiles(previousPluginId, zipName){
+   zipFiles(previousPluginId, zipName, replaceBy=''){
      
      // trim white spaces in name
-     // replace with '_'
-     zipName = zipname.replace(" ","_");
+     // replace with `replaceBy`
+     const trimmedZipName = this._replaceSpaceByText(zipName,replaceBy)
      const plPfdoRunArgs = {
        title: "zip_files",
        previous_id: previousPluginId,
@@ -148,7 +148,7 @@ export default class cujs{
             await this.pollPluginInstance(url);
             // Print msg once polling is complete
             console.log("Your zipped files are ready to download");
-            this.downloadFiles(this.pfdoInstId,zipName);
+            this.downloadFiles(this.pfdoInstId,trimmedZipName);
           })
           .catch(error=>
           {console.log("Please push files before zipping");});
@@ -671,8 +671,8 @@ export default class cujs{
         *
         * @return {String}
         */
-        replaceSpaceByChar(name,replaceBy){
-          const newName = name.replace(" ",replaceBy);
+        _replaceSpaceByText(name,replaceBy){
+          const newName = name.replace(/\s/g,replaceBy);
           return newName;
         };
 

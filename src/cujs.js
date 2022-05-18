@@ -133,7 +133,7 @@ export default class cujs{
        previous_id: previousPluginId,
        inputFile: "input.meta.json",
        noJobLogging: true,
-       exec: "'zip -r %outputDir/parent.zip %inputDir'"
+       exec: "'zip -r %outputDir/"+trimmedZipName+".zip %inputDir'"
       };
       var resp= this.client.getPlugins({name_exact: "pl-pfdorun"});
       resp.then(async data=>{
@@ -206,7 +206,7 @@ export default class cujs{
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
                   var fileName = paths[paths.length-1];
-                  if(fileName=='parent.zip'){
+                  if(fileName==`${zipName}.zip`){
                     fileFound = true;
                     const resp = await this._download(f.links[0].href);
                     FileSaver.saveAs(resp, zipName+".zip");

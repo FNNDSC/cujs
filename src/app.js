@@ -28,8 +28,8 @@ cu.login('http://localhost:8000/api/v1/','cube','cube1234');
 // Download files of a recent feed as save directly to local file system
 save.onclick = async function(){
 
-  //var feed = await cu.downloadFeed(parseInt(txtFeed.value),"Download of "+txtFeed.value);
-  var feed = await cu.getFeed(parseInt(txtFeed.value));
+  var feed = await cu.downloadFeed(parseInt(txtFeed.value),"Download of "+txtFeed.value);
+  //var feed = await cu.getFeed(parseInt(txtFeed.value));
 
   var details = await cu.getPluginInstanceDetails(feed);
   

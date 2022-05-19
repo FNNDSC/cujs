@@ -604,7 +604,7 @@ export default class cujs{
       
     };
     /**
-     * Utility method to convert ms to HHMMSS
+     * Utility method to convert ms to HH:MM:SS
      *
      *
      */
@@ -650,29 +650,55 @@ export default class cujs{
        * Create a new feed that merge contents of existing 
        * list of feeds
        *
-       * @param {}
-       * @param {}
+       * @param {List<Number>} feedIdList A list of numbers reprenting individual 
+       *                                  existing feed id 
+       * @param {String} newFeedName A string representing a feed name
        *
-       * @return {Feed}
+       * @return {Promise<Feed>} A JS Promise, resolves to a `Feed` object
        */
-       createMergeFeed(feedIdList,newFeedName){
+       createMergeFeed = async function(feedIdList,newFeedName){
        
-         // Fetch all feeds in the list
-         // Search `pl-dircopy` id
-         // create dircopy parameters
-         // Schedule pl-dircopy
+         let dirList = [];
+         let feed;
+         
+         // Fetch all feeds in the list & create a list of path
+         for(const feedId of feedIdList){
+         
+           // get the feed
+           feed = await this.client.getFeed(parseInt(feedId));
+           
+           const swiftPath = feed.data.creator_username + "/feed_" + feedId;
+           dirList.push(swiftPath);
+         }
+         
+         
+         // create dircopy params
+         const dircopyParams = {dir:dirList.toString(), previous_id: 0, title: newFeedName};
+         
+         // schedule dircopy
+         var re = await this.client.createPluginInstance(this.pluginId,dircopyParams);
+   
+         var dircopyInstId=this.getPluginId(re);
+    
+         await this.zipFiles(dircopyInstId, newFeedName);
+    
+         var newFeed = await re.getFeed();
+    
+         return newFeed;
+
        };
        
        /**
         * Replace white spaces in a text by the given char
         *
-        * @param {String}
-        * @param {character}
+        * @param {String} text Any string
+        * @param {String} replaceBy Any string representing one character
         *
-        * @return {String}
+        * @return {String} A modified version of 'text' with all the `space`
+        *                  characters replaced by 'replaceBy'
         */
-        _replaceSpaceByText(name,replaceBy){
-          const newName = name.replace(/\s/g,replaceBy);
+        _replaceSpaceByText(text,replaceBy){
+          const newName = text.replace(/\s/g,replaceBy);
           return newName;
         };
 

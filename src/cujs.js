@@ -595,7 +595,7 @@ export default class cujs{
       const progressPercentage = (completedMilestones/ totalMilestones) * 100;
       
       // fit details in json
-      details.size = this._formatBytes(totalSize);
+      details.size = this._formatBytes(totalSize,2);
       details.progress = progressPercentage;
       details.time = this._convertMsToHM(totalRunTime);
       
@@ -648,7 +648,7 @@ export default class cujs{
       
       /**
        * Create a new feed that merge contents of existing 
-       * list of feeds
+       * list of feeds & download in a single zip
        *
        * @param {List<Number>} feedIdList A list of numbers reprenting individual 
        *                                  existing feed id 
@@ -656,7 +656,7 @@ export default class cujs{
        *
        * @return {Promise<Feed>} A JS Promise, resolves to a `Feed` object
        */
-       createMergeFeed = async function(feedIdList,newFeedName){
+       downloadMultipleFeeds = async function(feedIdList,newFeedName){
        
          let dirList = [];
          let feed;
@@ -681,6 +681,44 @@ export default class cujs{
          var dircopyInstId=this.getPluginId(re);
     
          await this.zipFiles(dircopyInstId, newFeedName);
+    
+         var newFeed = await re.getFeed();
+    
+         return newFeed;
+
+       };
+       
+       /**
+       * Create a new feed that merge contents of existing 
+       * list of feeds
+       *
+       * @param {List<Number>} feedIdList A list of numbers reprenting individual 
+       *                                  existing feed id 
+       * @param {String} newFeedName A string representing a feed name
+       *
+       * @return {Promise<Feed>} A JS Promise, resolves to a `Feed` object
+       */
+       mergeMultipleFeeds = async function(feedIdList,newFeedName){
+       
+         let dirList = [];
+         let feed;
+         
+         // Fetch all feeds in the list & create a list of path
+         for(const feedId of feedIdList){
+         
+           // get the feed
+           feed = await this.client.getFeed(parseInt(feedId));
+           
+           const swiftPath = feed.data.creator_username + "/feed_" + feedId;
+           dirList.push(swiftPath);
+         }
+         
+         
+         // create dircopy params
+         const dircopyParams = {dir:dirList.toString(), previous_id: 0, title: newFeedName};
+         
+         // schedule dircopy
+         var re = await this.client.createPluginInstance(this.pluginId,dircopyParams);
     
          var newFeed = await re.getFeed();
     

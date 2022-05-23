@@ -30,7 +30,7 @@ save.onclick = async function(){
 
   const feedIds = txtFeed.value.split(',');
 
-  var feed = await cu.createMergeFeed(feedIds,"Download of "+txtFeed.value);
+  var feed = await cu.mergeMultipleFeeds(feedIds,"Download of "+txtFeed.value);
   //var feed = await cu.getFeed(parseInt(txtFeed.value));
 
   var details = await cu.getPluginInstanceDetails(feed);

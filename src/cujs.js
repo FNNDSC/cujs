@@ -133,7 +133,7 @@ export default class cujs{
        previous_id: previousPluginId,
        inputFile: "input.meta.json",
        noJobLogging: true,
-       exec: "'zip -r %outputDir/"+trimmedZipName+".zip %inputDir'"
+       exec: "'zip -r %outputDir/parent.zip %inputDir'"
       };
       var resp= this.client.getPlugins({name_exact: "pl-pfdorun"});
       resp.then(async data=>{
@@ -206,7 +206,7 @@ export default class cujs{
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
                   var fileName = paths[paths.length-1];
-                  if(fileName==`${zipName}.zip`){
+                  if(fileName=='parent.zip'){
                     fileFound = true;
                     const resp = await this._download(f.links[0].href);
                     FileSaver.saveAs(resp, zipName+".zip");
@@ -564,10 +564,13 @@ export default class cujs{
       // declare lookup for instance intermediate statuses
       const LOOKUP = new Map();
       LOOKUP.set("cancelled",0);
-      LOOKUP.set("started",1);
-      LOOKUP.set("waiting",2);
-      LOOKUP.set("registeringFiles",3);
-      LOOKUP.set("finishedSuccessfully",4);
+      LOOKUP.set("finishedWithError",0);
+
+      LOOKUP.set("waiting",1);
+      LOOKUP.set("scheduled",2);
+      LOOKUP.set("started",3);
+      LOOKUP.set("registeringFiles",4);
+      LOOKUP.set("finishedSuccessfully",5);
       
       // json object to return details
       let details = {};
@@ -576,9 +579,10 @@ export default class cujs{
       let totalSize = 0;
       let totalRunTime = 0;
       let totalProgress = 0;
+      let error = false;
       
       const pluginInstances = await feed.getPluginInstances();
-      const totalMilestones = pluginInstances.data.length * 4;
+      const totalMilestones = pluginInstances.data.length * 5;
       let completedMilestones = 0;
       
       // iterate over all instances to calculate results
@@ -591,13 +595,19 @@ export default class cujs{
         const status = pluginInstance.status;
         completedMilestones += LOOKUP.get(status);
         
+        // check on error
+        if(LOOKUP.get(status) == 0){
+          error = true;
+        }
+        
       }
       const progressPercentage = (completedMilestones/ totalMilestones) * 100;
       
       // fit details in json
-      details.size = this._formatBytes(totalSize,2);
-      details.progress = progressPercentage;
+      details.size = this._formatBytes(totalSize,0);
+      details.progress = Math.floor(progressPercentage);
       details.time = this._convertMsToHM(totalRunTime);
+      details.error = error;
       
       return details;
       
@@ -635,11 +645,11 @@ export default class cujs{
        *
        */
       _formatBytes(bytes, decimals = 2) {
-        if (bytes === 0) return '0 Bytes';
+        if (bytes === 0) return '0 B';
 
         const k = 1024;
         const dm = decimals < 0 ? 0 : decimals;
-        const sizes = ['Bytes', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        const sizes = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 

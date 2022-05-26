@@ -561,6 +561,7 @@ export default class cujs{
      */
     getPluginInstanceDetails = async function(feed){
     
+    
       // declare lookup for instance intermediate statuses
       const LOOKUP = new Map();
       LOOKUP.set("cancelled",0);
@@ -580,6 +581,8 @@ export default class cujs{
       let totalRunTime = 0;
       let totalProgress = 0;
       let error = false;
+      let finishedCount = 0;
+      let errorCount = 0;
       
       const pluginInstances = await feed.getPluginInstances();
       const totalMilestones = pluginInstances.data.length * 5;
@@ -598,8 +601,26 @@ export default class cujs{
         // check on error
         if(LOOKUP.get(status) == 0){
           error = true;
+          errorCount +=1;
         }
         
+        // check finished jobs
+        if(LOOKUP.get(status) == 5){
+          finishedCount += 1;
+        }
+        
+      }
+            
+      let feedProgressText =
+          finishedCount +
+                    '/' +
+          pluginInstances.data.length +
+          ' jobs completed'
+      
+      if(error){
+        feedProgressText = errorCount +
+                                  '/' + 
+                                  pluginInstances.data.length + ' jobs failed'
       }
       const progressPercentage = (completedMilestones/ totalMilestones) * 100;
       
@@ -608,6 +629,7 @@ export default class cujs{
       details.progress = Math.floor(progressPercentage);
       details.time = this._convertMsToHM(totalRunTime);
       details.error = error;
+      details.feedProgressText = feedProgressText
       
       return details;
       

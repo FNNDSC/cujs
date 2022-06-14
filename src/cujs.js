@@ -460,45 +460,7 @@ export default class cujs{
     *
     */
     setClient=async function(client){
-      const delay = ms => new Promise(res => setTimeout(res, ms));
       this.client=client;
-      var searchParams = {name: "pl-dircopy"};
-      var resp= this.client.getPlugins(searchParams);
-      resp.then(data=>{
-          this.pluginId = data.collection.items[0].data[0].value;
-      })
-      .catch(error=>
-      {console.log("Could not find pl-dircopy. Errors" + error);});
-      await delay(500);
-    }
-    
-    /**
-    * Get the progress of a given feed (WIP)
-    *
-    */
-    getFeedProgress= async function(feed){
-    
-      const LOOKUP = new Map();
-      LOOKUP.set("cancelled",0);
-      LOOKUP.set("started",1);
-      LOOKUP.set("waiting",2);
-      LOOKUP.set("registeringFiles",3);
-      LOOKUP.set("finishedSuccessfully",4);
-                      
-      const pluginInstances = await feed.getPluginInstances();
-      
-      const totalMilestones = pluginInstances.data.length * 4;
-      var completedMilestones = 0;
-      
-      for(var pluginInstance of pluginInstances.data){
-        var status = pluginInstance.status;
-        completedMilestones += LOOKUP.get(status);
-      }
-      
-      var progressPercentage = (completedMilestones/ totalMilestones) * 100;
-      
-      return progressPercentage;
-      
     }
     
     /**
@@ -512,42 +474,6 @@ export default class cujs{
     }
     
     /**
-    * Get the cumulative run time of a given feed in milliseconds
-    *
-    */
-    getRunTime=async function(feed){
-      const pluginInstances = await feed.getPluginInstances();
-      
-      var totalRunTime = 0;
-      
-      for(var pluginInstance of pluginInstances.data){
-        var startTime = Date.parse(pluginInstance.start_date);
-        var endTime = Date.parse(pluginInstance.end_date);
-        
-        totalRunTime += (endTime - startTime);
-      }
-      
-      return totalRunTime;
-    }
-    
-    /**
-    * Get the total file size of a given feed in bytes
-    *
-    */
-    getSize=async function(feed){
-      const pluginInstances = await feed.getPluginInstances();
-      
-      var totalSize = 0;
-      
-      for(var pluginInstance of pluginInstances.data){
-        
-        totalSize += pluginInstance.size;
-      }
-      
-      return totalSize;
-    }
-    
-    /**
      * Return an object containing details of plugin instances of a given feed
      *
      * @param {Feed} feed
@@ -556,7 +482,9 @@ export default class cujs{
      * @example :{
      *             size : "Bytes/kB/MB/GB/../ZB",
      *             progress : nn,
-     *             time : "HH:MM:SS"
+     *             time : "HH:MM:SS",
+     *             error : true ,
+     *             feedProgressText : "1/2 jobs failed"
      *           }
      */
     getPluginInstanceDetails = async function(feed){
@@ -690,6 +618,11 @@ export default class cujs{
        */
        downloadMultipleFeeds = async function(feedIdList,newFeedName){
        
+         // Find out dircopy plugin id
+         const searchParams = {name: "pl-dircopy"};
+         const resp = await this.client.getPlugins(searchParams);
+         const dircopyId = resp.data.collection.items[0].data[0].value;
+         
          let dirList = [];
          let feed;
          
@@ -708,7 +641,7 @@ export default class cujs{
          const dircopyParams = {dir:dirList.toString(), previous_id: 0, title: newFeedName};
          
          // schedule dircopy
-         var re = await this.client.createPluginInstance(this.pluginId,dircopyParams);
+         var re = await this.client.createPluginInstance(dircopyId,dircopyParams);
    
          var dircopyInstId=this.getPluginId(re);
     
@@ -732,6 +665,11 @@ export default class cujs{
        */
        mergeMultipleFeeds = async function(feedIdList,newFeedName){
        
+         // Find out dircopy plugin id
+         const searchParams = {name: "pl-dircopy"};
+         const resp = await this.client.getPlugins(searchParams);
+         const dircopyId = resp.data.collection.items[0].data[0].value;
+       
          let dirList = [];
          let feed;
          
@@ -750,7 +688,7 @@ export default class cujs{
          const dircopyParams = {dir:dirList.toString(), previous_id: 0, title: newFeedName};
          
          // schedule dircopy
-         var re = await this.client.createPluginInstance(this.pluginId,dircopyParams);
+         var re = await this.client.createPluginInstance(dircopyId,dircopyParams);
     
          var newFeed = await re.getFeed();
     

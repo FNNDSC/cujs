@@ -254,7 +254,22 @@ export default class cujs{
       .catch(error=>{
         console.log("Invalid login credentials. Error:"+error);});
    };
-  
+   
+  /**
+   * Recursively create a path by creating folders
+   *
+   *
+   */ 
+  createPath = async function(rootDirHandle, folders){
+    var currDirHandle = await rootDirHandle.getDirectoryHandle(folders[0], {
+      create: true,
+    });
+    folders = folders.slice(1);
+    if(folders.length){
+      currDirHandle = await this.createPath(currDirHandle,folders);
+    }
+    return currDirHandle;
+  }
   /**
    * Download files of a particular feed from CUBE and save directory on user's disk
    *
@@ -278,7 +293,10 @@ export default class cujs{
                   var filePath = f.data[2].value;
                   var paths = filePath.split('/');
                   var fileName = paths[paths.length-1];
-                  const newFileHandle = await newDirectoryHandle.getFileHandle(fileName, { create: true });
+                  var basedir = filePath.substring(0, filePath.lastIndexOf('/'));
+                  var folders = basedir.split('/');
+                  var currDirHandle = await this.createPath(newDirectoryHandle,folders);
+                  const newFileHandle = await currDirHandle.getFileHandle(fileName, { create: true });
                   const writable = await newFileHandle.createWritable();
                   const req = new Request(this.client.auth, 'application/octet-stream', 3000000);
                   const blobUrl = f.links[0].href;
@@ -296,7 +314,7 @@ export default class cujs{
             { console.log("Zero files found!!");}
     })
     .catch(error=>{
-      console.log("Zero files found!!");});
+      console.log(error);});
     })
     .catch(error =>
     {console.log(error);});

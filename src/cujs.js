@@ -133,7 +133,7 @@ export default class cujs{
        previous_id: previousPluginId,
        inputFile: "input.meta.json",
        noJobLogging: true,
-       exec: "'zip -r %outputDir/parent.zip %inputDir'"
+       exec: "zip -r %outputDir/parent.zip %inputDir"
       };
       var resp= this.client.getPlugins({name_exact: "pl-pfdorun"});
       resp.then(async data=>{
@@ -176,7 +176,7 @@ export default class cujs{
            console.log(status);           
 
       }
-      while (status !== 'finishedSuccessfully' && status != 'cancelled');
+      while (status !== 'finishedSuccessfully' && status != 'cancelled' && status != 'finishedWithError' );
     };
   
   /**
@@ -639,7 +639,7 @@ export default class cujs{
          // Find out dircopy plugin id
          const searchParams = {name: "pl-dircopy"};
          const resp = await this.client.getPlugins(searchParams);
-         const dircopyId = resp.data.collection.items[0].data[0].value;
+         const dircopyId = resp.data[0].id;
          
          let dirList = [];
          let feed;
@@ -686,7 +686,7 @@ export default class cujs{
          // Find out dircopy plugin id
          const searchParams = {name: "pl-dircopy"};
          const resp = await this.client.getPlugins(searchParams);
-         const dircopyId = resp.data.collection.items[0].data[0].value;
+         const dircopyId = resp.data[0].id;
        
          let dirList = [];
          let feed;

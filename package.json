@@ -1,6 +1,6 @@
 {
   "name": "chris-upload",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "JS library to upload and push files to CUBE",
   "main": "src/cujs.js",
   "scripts": {

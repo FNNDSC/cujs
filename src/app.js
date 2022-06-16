@@ -30,7 +30,7 @@ save.onclick = async function(){
 
   const feedIds = txtFeed.value.split(',');
 
-  var feed = await cu.saveFiles(parseInt(feedIds[0]),"Download of "+txtFeed.value);
+  var feed = await cu.downloadMultipleFeeds(feedIds,"Download of "+txtFeed.value);
   //var feed = await cu.getFeed(parseInt(txtFeed.value));
 
   //var details = await cu.getPluginInstanceDetails(feed);

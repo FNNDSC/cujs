@@ -30,12 +30,12 @@ save.onclick = async function(){
 
   const feedIds = txtFeed.value.split(',');
 
-  var feed = await cu.downloadMultipleFeeds(feedIds,"Download of "+txtFeed.value);
-  //var feed = await cu.getFeed(parseInt(txtFeed.value));
+  //var feed = await cu.downloadMultipleFeeds(feedIds,"Download of "+txtFeed.value);
+  var feed = await cu.getFeed(parseInt(txtFeed.value));
 
-  //var details = await cu.getPluginInstanceDetails(feed);
+  var details = await cu.getPluginInstanceDetails(feed);
   
-  //console.log(details);
+  console.log(details);
 
   const text = txtFeed.value;
   words = text.split(" ");

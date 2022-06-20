@@ -530,7 +530,8 @@ export default class cujs{
       let finishedCount = 0;
       let errorCount = 0;
       
-      const pluginInstances = await feed.getPluginInstances();
+      const params = { limit: 10000, offset: 0 };
+      const pluginInstances = await feed.getPluginInstances(params);
       const totalMilestones = pluginInstances.data.length * 5;
       let completedMilestones = 0;
       
